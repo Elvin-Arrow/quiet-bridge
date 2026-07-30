@@ -34,7 +34,7 @@ Word caps are enforced in code, not just requested in the prompt: QUIET 25 words
 | Presence over time | Time-Shift simulator (Day 1 / Day 4 / Day 14), a 12-hour quiet window, "I can stay quiet now" button | The Stretch engine's `CheckInDecision` logic and suppression windows; actual check-in delivery |
 | Memory | A 6-item in-memory fact list, deduplicated per session | Memory-kernel versioning, a do-not-ask list, persistence (Postgres/Supabase); everything wipes on restart |
 | Task handling | Single next-step extraction, mode-gated ORGANISE output | "Not Tonight" queue contents, smart drafts (work email, bank call script, Tell Us Once prep) |
-| Voice | ElevenLabs TTS output with SHA1 response caching, mode-to-speed matrix, silent degradation if the API fails | Voice input / speech-to-text (the Talk chip has no recorder) |
+| Voice | ElevenLabs TTS output with SHA1 response caching, mode-to-speed matrix, silent degradation if the API fails. Voice input via OpenAI `whisper-1` (`POST /v1/listen`): raw audio buffer in, domain-biased decode prompt so "probate", "registrar", and "Tell Us Once" survive a shaky 3AM recording, honest degradation (`503 LISTEN_OFF`, `400 NO_AUDIO`, `422 NO_SPEECH`, `500 LISTEN_FAILED`, all shown to the user as "I did not catch that.") | None |
 | UI | Entry screen (channel + 4 mood chips + skip), 3 panels (What I Heard / What I Chose / What I Did), `data-mood` theming across all 6 tokens, `prefers-reduced-motion` support | Same-story / different-hour compare toggle |
 | Demo tooling | Time-Shift with 3 fixed stops, permanently labelled "Simulator — moves the clock, not real time" | `/control` panel, scenario seeds, a degrade switch, telemetry, `DEMO_OFFLINE` stub |
 | Safety | Deterministic crisis classifier, three UK routes as tappable links | Judge-attack button |
@@ -74,7 +74,7 @@ public/app.js       composer, panels, quiet button, time-shift        160 lines
 
 **Endpoints:** `GET /v1/state`, `POST /v1/mood`, `POST /v1/ingest`, `POST /v1/quiet`, `DELETE /v1/quiet`, `POST /v1/speech`, `POST /v1/demo/time-shift`, `POST /v1/session/reset`.
 
-**Stack:** Node.js (>= 20.6), Express 4, vanilla JS/HTML/CSS, OpenAI `gpt-4o-mini`, ElevenLabs TTS (`eleven_multilingual_v2`).
+**Stack:** Node.js (>= 20.6), Express 4, vanilla JS/HTML/CSS, OpenAI `gpt-4o-mini`, OpenAI `whisper-1`, ElevenLabs TTS (`eleven_multilingual_v2`).
 
 ## Running it
 

@@ -85,40 +85,63 @@ let recorder = null;
 let chunks = [];
 let recording = false;
 
+let startedAt = 0;
+
 async function startRecording() {
   if (recording) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-    recorder = new MediaRecorder(stream, { mimeType: mime });
+    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+      .find((m) => MediaRecorder.isTypeSupported(m)) || '';
+    recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    const actual = recorder.mimeType || mime || 'audio/webm';
     chunks = [];
     recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
     recorder.onstop = () => {
       stream.getTracks().forEach((t) => t.stop());
-      submitAudio(new Blob(chunks, { type: mime }), mime);
+      submitAudio(new Blob(chunks, { type: actual }), actual);
     };
-    recorder.start();
+    // Timeslice so chunks land every 250ms rather than only on stop —
+    // a stop that never fires would otherwise lose the whole recording.
+    recorder.start(250);
     recording = true;
+    startedAt = Date.now();
     $('mic').classList.add('recording');
     $('mic').textContent = 'Listening — let go to send';
+    console.log('[voice] recording as', actual);
   } catch (err) {
-    $('mic').textContent = 'I need the microphone';
+    console.error('[voice] mic denied:', err.name);
+    $('mic').textContent = 'I need microphone access';
+    $('response').textContent = 'I need permission to use the microphone. Check the address bar.';
   }
 }
 
 function stopRecording() {
   if (!recording || !recorder) return;
+  // Ignore an instant release — a click is not a sentence, and stopping a
+  // recorder before it has produced a chunk yields an empty blob.
+  if (Date.now() - startedAt < 400) {
+    $('mic').textContent = 'Hold it down while you speak';
+    setTimeout(() => { $('mic').textContent = 'Hold to talk'; }, 1600);
+  }
   recording = false;
   $('mic').classList.remove('recording');
-  $('mic').textContent = 'Hold to talk';
-  recorder.stop();
+  if ($('mic').textContent === 'Listening — let go to send') $('mic').textContent = 'Hold to talk';
+  try { recorder.stop(); } catch (err) { console.error('[voice] stop:', err.message); }
   recorder = null;
 }
 
 async function submitAudio(blob, mime) {
-  if (blob.size < 2000) return; // a tap, not a sentence
+  console.log('[voice] captured', blob.size, 'bytes as', mime);
+
+  // Never fail silently. A dropped recording that shows nothing is
+  // indistinguishable from the app ignoring the person.
+  if (blob.size < 800) {
+    $('response').textContent = 'That was too short. Hold the button while you speak.';
+    return;
+  }
   if (audioEl) { audioEl.pause(); audioEl = null; }
-  $('response').textContent = 'Reading.';
+  $('response').textContent = 'Listening back.';
 
   let text;
   try {
@@ -127,9 +150,12 @@ async function submitAudio(blob, mime) {
       headers: { 'Content-Type': mime },
       body: blob,
     });
-    if (!res.ok) throw new Error('listen');
-    ({ text } = await res.json());
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.error?.code ?? `http_${res.status}`);
+    ({ text } = payload);
+    if (!text) throw new Error('empty_transcript');
   } catch (err) {
+    console.error('[voice] listen failed:', err.message);
     $('response').textContent = 'I did not catch that. Try again?';
     return;
   }
@@ -141,11 +167,28 @@ async function submitAudio(blob, mime) {
 }
 
 const mic = $('mic');
-mic.addEventListener('mousedown', startRecording);
-mic.addEventListener('mouseup', stopRecording);
-mic.addEventListener('mouseleave', stopRecording);
-mic.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
-mic.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
+mic.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  // Capture the pointer so sliding off the button mid-sentence does not
+  // cut the recording — the old mouseleave handler was doing exactly that.
+  try { mic.setPointerCapture(e.pointerId); } catch (err) { /* not critical */ }
+  startRecording();
+});
+mic.addEventListener('pointerup', (e) => {
+  e.preventDefault();
+  try { mic.releasePointerCapture(e.pointerId); } catch (err) { /* not critical */ }
+  stopRecording();
+});
+mic.addEventListener('pointercancel', stopRecording);
+// Space bar works too — easier to hold steady on stage than a mouse button.
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && channel === 'voice' && document.activeElement !== $('input') && !e.repeat) {
+    e.preventDefault(); startRecording();
+  }
+});
+window.addEventListener('keyup', (e) => {
+  if (e.code === 'Space' && channel === 'voice') { e.preventDefault(); stopRecording(); }
+});
 
 async function send() {
   const text = $('input').value.trim();

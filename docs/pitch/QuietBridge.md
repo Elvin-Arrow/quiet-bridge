@@ -177,6 +177,8 @@ Mood chips avoid diagnostic language on purpose: a clinical label invites the pe
 <div class="card"><h4>Enforced after generation</h4><p>Word caps: QUIET 25 · WITNESS 35 · SOFTEN 45 · ORGANISE/ESCALATE 60. Speed: ESCALATE 0.80x · QUIET 0.85x · SOFTEN 0.90x.</p></div>
 </div>
 
+<p class="subtle" style="margin-top:16px;">Speech in, too: OpenAI <code>whisper-1</code> transcribes a spoken note before the router ever runs.</p>
+
 <!--
 Preempts the two hardest judge questions: "isn't this just prompt styling" and "isn't this just if-statements." Say both out loud.
 -->

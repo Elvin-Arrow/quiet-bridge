@@ -12,6 +12,21 @@ const CRISIS_TERMS = [
   'hurting myself', 'overdose', "can't go on", 'cant go on',
   'give up on life', 'join her', 'join him', 'be with her again',
   'be with him again', 'disappear forever',
+  // Added after probing the running app: the terms above are how a lexicon
+  // author writes it down, not how a grieving person says it at 3am. Every
+  // phrase below was a measured false negative.
+  "don't want to be here", 'dont want to be here', 'not want to be here',
+  "don't want to be alive", 'dont want to be alive',
+  "don't want to wake up", 'dont want to wake up',
+  "don't want to exist", 'dont want to exist',
+  'no point in anything', 'no point to anything', 'no point in any of it',
+  'nothing to live for', 'nothing left to live for',
+  'wish i was dead', 'wish i were dead', "wish i wasn't here",
+  'end it all', 'ending it all', 'want it all to stop',
+  'join my mum', 'join my mother', 'join my dad', 'join my father',
+  'join my wife', 'join my husband', 'join my son', 'join my daughter',
+  'join them', 'want to be with her', 'want to be with him',
+  'want to be with them', 'cannot go on', 'harm myself',
 ];
 
 const ADMIN_TERMS = [
