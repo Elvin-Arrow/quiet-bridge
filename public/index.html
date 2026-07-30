@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuietBridge</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div id="entry" class="entry">
+  <div class="entry-inner">
+    <p class="entry-kicker">Quietbridge</p>
+    <p class="entry-lead">Before anything else.</p>
+
+    <div class="entry-row" id="channel-row">
+      <button class="chip lg" data-channel="voice">Talk</button>
+      <button class="chip lg" data-channel="text">Type</button>
+    </div>
+
+    <div class="entry-divider" aria-hidden="true"></div>
+
+    <p class="entry-sub">How are you right now?</p>
+    <div class="entry-row wrap" id="mood-row">
+      <button class="chip" data-mood="OVERWHELMED">There's too much</button>
+      <button class="chip" data-mood="NUMB">I feel nothing</button>
+      <button class="chip" data-mood="RAW">It's hitting me</button>
+      <button class="chip" data-mood="ANXIOUS">I'm scared about something</button>
+    </div>
+    <button class="skip" data-mood="">I'd rather not say</button>
+  </div>
+</div>
+
+<header class="header">
+  <span class="wordmark">QuietBridge</span>
+  <div class="shift" id="shift">
+    <span class="shift-label">Simulator — moves the clock, not real time</span>
+    <button class="chip sm active" data-stop="DAY1">Day 1 · 03:00</button>
+    <button class="chip sm" data-stop="DAY4">Day 4 · 11:00</button>
+    <button class="chip sm" data-stop="DAY14">Day 14 · 20:00</button>
+  </div>
+</header>
+
+<main class="stack">
+  <div class="ledger">
+    <section class="panel" id="p-heard">
+      <h2 class="panel-h">What I heard</h2>
+      <div class="panel-body">
+        <p class="muted" id="heard-empty">Nothing yet.</p>
+        <ul class="facts" id="facts"></ul>
+      </div>
+    </section>
+
+    <section class="panel" id="p-chose">
+      <h2 class="panel-h">What I chose</h2>
+      <div class="panel-body">
+        <p class="muted" id="chose-empty">No decision yet.</p>
+        <div id="chose" hidden>
+          <div class="chips" id="modes"></div>
+          <div class="mood-chip" id="mood-chip" hidden></div>
+          <ul class="rationale" id="rationale"></ul>
+          <p class="degraded" id="degraded" hidden>I routed this on time and workload only.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="p-did">
+      <h2 class="panel-h">What I did</h2>
+      <div class="panel-body">
+        <p class="response" id="response">Tell me what's happening. One note is enough.</p>
+        <button class="play" id="play" hidden>Play</button>
+
+        <div class="action" id="action" hidden>
+          <p class="action-step" id="action-step"></p>
+          <p class="action-why" id="action-why"></p>
+        </div>
+
+        <p class="parked muted" id="parked" hidden></p>
+        <button class="quiet-btn" id="quiet-btn" hidden>I can stay quiet now.</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="composer">
+  <button class="chip sm" id="channel-toggle">Talk</button>
+  <button class="chip sm" id="mood-toggle" title="Change how you are">Mood</button>
+  <input id="input" type="text" autocomplete="off"
+         placeholder="Say what's happening.">
+  <button class="send" id="send">Send</button>
+</div>
+
+<p class="footer">Demo — synthetic data only.</p>
+
+<script src="/app.js"></script>
+</body>
+</html>

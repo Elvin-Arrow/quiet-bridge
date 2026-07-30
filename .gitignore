@@ -1,0 +1,20 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# deps / build
+node_modules/
+dist/
+build/
+.vite/
+
+# runtime state (synthetic demo data)
+data/*.json
+!data/.gitkeep
+
+# os / editor
+.DS_Store
+*.log
+.idea/
+.vscode/

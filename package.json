@@ -1,0 +1,17 @@
+{
+  "name": "quietbridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --env-file=.env --watch server.js",
+    "check": "node --env-file=.env scripts/check-keys.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
