@@ -1,5 +1,29 @@
 # Product Brief: QuietBridge (Hackathon Track 1 Submission)
 
+## Hackathon Judging Criteria
+The same four criteria apply to both tracks, and each is weighted equally:
+
+* **Originality:** How fresh or unexpected the idea and approach are.
+* **Technical Execution:** How far the team gets and how well the product actually works.
+* **Applicability:** Whether it would genuinely help someone or matter specifically to EverSettled.
+* **Fit to the Brief:** Judged live from what is shown in the demo; no test cases are required.
+
+## Track 1 Alignment & Build Constraints
+QuietBridge is a **Track 1 - Presence** entry. The brief asks for an agent that supports someone through a hard period, not merely one that answers a single prompt. It explicitly welcomes both a care copilot and the infrastructure that remembers context and decides when to check in or leave someone alone; QuietBridge combines both directions.
+
+### What the live demo must prove
+* The agent understands the person and their changing situation, not just the latest prompt.
+* Presence is demonstrated across time: what it remembers, what it deliberately defers, and why it checks in or stays quiet.
+* The care-state routing and one-next-step output work reliably with clear, visible reasoning.
+* The estate-settlement context matters to EverSettled: families can face up to 18 months, substantial costs, and hundreds of hours of administrative work while grieving.
+
+### Care, data, and implementation principles
+* Do not position QuietBridge as a therapist, doctor, solicitor, or financial adviser. Recognise genuine crisis, signpost appropriate help, and hand off to people or services when that is the kind response.
+* Use synthetic/demo data only; do not enter real personal or sensitive information into the prototype.
+* Keep provider credentials and event codes out of source control.
+* Use a cost-aware model strategy: develop and route routine requests with a fast, low-cost model; reserve higher-reasoning or live-voice models for the moments that demonstrably need them.
+* Voice is optional but valuable where tone carries empathy. Any spoken response should preserve QuietBridge's restraint, pacing, and silence-first design.
+
 ## 1. Executive Summary & Vision
 QuietBridge is an empathetic care-routing agent designed for individuals undergoing acute cognitive overload and grief (e.g., bereavement, diagnosis, major loss). Rather than acting as a standard conversational chatbot that responds with long paragraphs, QuietBridge acts as a front-door buffer. 
 
