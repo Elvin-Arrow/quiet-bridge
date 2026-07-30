@@ -524,13 +524,20 @@ export function decideCareState(
   } else {
     const quiet =
       signals.time_of_day === "NIGHT" ||
-      signals.energy_score <= 30 ||
-      signals.question_tolerance <= 30 ||
+      signals.energy_score <= 20 ||
+      signals.question_tolerance <= 20 ||
+      (signals.fatigue_level >= 60 && signals.energy_score <= 35) ||
       state.memory.preferences.quiet_preferred;
     const organise = signals.admin_density >= 40 && confidence >= 0.55;
     const soften = signals.grief_level >= 70 && signals.admin_density < 40;
+    const witness =
+      signals.grief_level >= 30 ||
+      state.memory.preferences.declared_mood === "SAD" ||
+      state.memory.preferences.declared_mood === "NUMB" ||
+      state.memory.preferences.declared_mood === "ANXIOUS";
     if (organise) modes.push("ORGANISE");
     if (soften) modes.push("SOFTEN");
+    if (witness && !soften && !organise) modes.push("WITNESS");
     if (quiet) modes.push("QUIET");
     if (modes.length === 0) modes.push("WITNESS");
     if (confidence < 0.55 && !modes.includes("QUIET")) modes.splice(0, modes.length, "WITNESS");
@@ -541,7 +548,7 @@ export function decideCareState(
   if (signals.time_of_day === "NIGHT") {
     rationale.push({ clause: "late hour", signal: "time_of_day", value: signals.time_of_day });
   }
-  if (signals.energy_score <= 30) {
+  if (signals.energy_score <= 20) {
     rationale.push({ clause: "very little energy", signal: "energy_score", value: signals.energy_score });
   }
   if (signals.admin_density >= 40) {
@@ -862,6 +869,18 @@ function updateMemory(state: SessionState, text: string, eventId: string, now: s
   if (/\bbank\b.{0,50}\b(document|paper|asked|request)\b/i.test(text)) {
     candidates.push(["admin.bank_request", "documents_requested", "The bank asked for documents.", 0.9]);
   }
+  if (/\b(i('m| am)|feeling)\s+sad\b/i.test(text)) {
+    candidates.push(["user.mood", "sad", "You said you are sad.", 0.92]);
+  }
+  if (/\b(i('m| am)|feeling)\s+(numb|empty)\b/i.test(text)) {
+    candidates.push(["user.mood", "numb", "You said you feel numb.", 0.92]);
+  }
+  if (/\b(i('m| am)|feeling)\s+(anxious|worried|scared)\b/i.test(text)) {
+    candidates.push(["user.mood", "anxious", "You said you feel anxious.", 0.9]);
+  }
+  if (/\b(i('m| am)|feeling)\s+overwhelmed\b/i.test(text)) {
+    candidates.push(["user.mood", "overwhelmed", "You said you feel overwhelmed.", 0.9]);
+  }
   for (const [key, value, display, confidence] of candidates) {
     const existing = state.memory.canonical_facts.find(
       (fact) => fact.key === key && fact.value === value && !fact.archived,
@@ -903,8 +922,11 @@ function composeResponse(careState: CareState, safePivot: boolean): string {
   if (careState.modes.includes("SOFTEN")) {
     return "This is a lot to carry. Nothing needs to be solved in this moment.";
   }
+  if (careState.modes.includes("WITNESS")) {
+    return "I heard you. You do not have to tidy this up for me.";
+  }
   if (careState.modes.includes("QUIET")) {
-    return "Nothing else is needed now. I can stay quiet.";
+    return "I am here with you. Nothing else is needed right now.";
   }
   return "I heard you. There is no pressure to explain more.";
 }
