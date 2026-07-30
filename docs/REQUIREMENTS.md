@@ -22,12 +22,14 @@
 | Ver | Date | Change | Author |
 |---|---|---|---|
 | 0.1 | 2026-07-30 | Initial full draft (Pass 1). All sections populated. Assumptions marked `[ASM-nnn]`. | Architect |
+| 0.2 | 2026-07-30 | Added §5.13 Adaptive Presentation (`FR-ADAPT`): entry mode choice, four-mood taxonomy, mood-driven theming, optional age register. Facial-emotion capture evaluated and rejected — see `OOS-12`, `RISK-015`. | Architect |
+| 0.3 | 2026-07-30 | Mood is now **user-declared** rather than inferred (§2.7, §5.13.2a). Inference demoted to `C`, may offer but never override. Camera retained as a pitch-roadmap item under explicit honesty rules (`FR-ADAPT-026`–`028`). | Architect |
 
 ### 0.2 Requirement ID Convention
 
 `FR-<AREA>-<NNN>` for functional, `NFR-<AREA>-<NNN>` for non-functional, `ASM-<NNN>` for assumptions, `CON-<NNN>` for constraints, `RISK-<NNN>` for risks, `AC-<AREA>-<NNN>` for acceptance criteria.
 
-Areas: `IN` (ingestion), `ROUTER`, `MEM` (memory kernel), `STRETCH`, `TRIAGE`, `QUEUE` (Not Tonight), `DRAFT`, `SAFE` (safety/guardrails), `UI`, `QUIET`, `DEMO`, `API`, `VOICE`, `OBS` (observability), `SEC`, `PRIV`, `A11Y`, `PERF`, `COST`, `REL`.
+Areas: `IN` (ingestion), `ROUTER`, `MEM` (memory kernel), `STRETCH`, `TRIAGE`, `QUEUE` (Not Tonight), `DRAFT`, `SAFE` (safety/guardrails), `UI`, `ADAPT` (adaptive presentation), `QUIET`, `DEMO`, `API`, `VOICE`, `OBS` (observability), `SEC`, `PRIV`, `A11Y`, `PERF`, `COST`, `REL`.
 
 Priority: **M** = must (demo fails without it), **S** = should (demo is weaker without it), **C** = could (stretch if time remains).
 
@@ -131,6 +133,8 @@ QuietBridge is a **greenfield, self-contained web application**. It does not int
 | OOS-09 | Real-time full-duplex voice conversation (barge-in, interruption handling) | Cost + build time; turn-based only. See `ASM-012` |
 | OOS-10 | Offline mode / PWA install | Not demoed |
 | OOS-11 | Long-term analytics, A/B testing, retention instrumentation | Not demoed |
+| OOS-12 | **Facial-emotion capture.** Camera access, face photo, or any inference of mood from facial expression | Not built, on four independent grounds — see `RISK-015`. Mood is declared by the user (`FR-ADAPT-020`); language and prosody are secondary at most. Retained as a **roadmap item in the pitch only**, under the honesty rules in §2.7 |
+| OOS-13 | Age-band **vocabulary** adaptation — slang, memes, generational idiom in generated copy | Register (length, formality, which tasks surface) adapts; word choice does not. See `FR-ADAPT-011`, `RISK-016` |
 
 ### 2.3 Personas
 
@@ -209,6 +213,24 @@ QuietBridge's Track-1 claim is that it **decides** when to reach out and when to
 | FR-STRETCH-018 | The `check_in_decisions` table shall be shaped as a drainable outbox (`due_at`, `delivery_state`) even though nothing drains it in the hackathon build. Schema shall not need to change to add real delivery. | M/I |
 | FR-DEMO-012 | The Time-Shift control shall be visibly and permanently labelled **"Simulator — moves the clock, not real time"** in the UI, and any check-in surfaced via Time-Shift shall carry an inline note: "In a real deployment this would have reached you at 11:04 on Day 4." | M/D |
 
+### 2.7 Mood Capture: Declared, Inferred, and Roadmap
+
+Mood has three possible sources. The build uses one of them. This section states which, so the pitch and the product agree.
+
+**What is real in the hackathon build — the user declares it.** On entry the person picks how they are from four plain-language options, or skips. That selection is authoritative, it drives the theme immediately, and it is changeable in one tap at any point (`FR-ADAPT-020`–`022`). No inference is required for the demo to work, which means no inference can break it on stage.
+
+**Secondary, if time allows — inferred from language and prosody.** The signal pass (§5.2.2) already extracts fatigue, admin density, and fragmentation. Those can propose a mood, but a proposal may only be *offered*, never silently applied over what the person said about themselves (`FR-ADAPT-025`). Someone who has been told what they feel all week does not need software doing it too.
+
+**Roadmap only, never built, never demoed — the camera.** Facial-expression capture is retained as a stated direction in the pitch, not as a feature. The reasoning that keeps it out of the build is in `RISK-015` and is unchanged.
+
+| ID | Requirement | P/V |
+|---|---|---|
+| FR-ADAPT-026 | No build artefact shall contain camera code, a camera permission request, a `getUserMedia` video call, or a UI element implying facial capture — including disabled, "coming soon", or greyed-out controls. | M/I |
+| FR-ADAPT-027 | Where the camera direction appears in the deck or the spoken pitch, it shall be explicitly labelled as not built — "where this goes next", never "the system reads your face". No screenshot, mockup, or animation shall depict it as a working screen without a visible **Not built** marker. | M/I |
+| FR-ADAPT-028 | If a judge asks whether the camera works, the answer is "no — we chose declared mood for the build, and here is why", followed by the `RISK-015` reasoning. The rejection is a stronger answer than the feature. | M/D |
+
+**Why pitch it at all.** The camera is worth thirty seconds as a roadmap item because it lets the team show its judgment: the direction was considered, the evidence was checked, and it was declined on grounds the team can articulate. That reads as engineering maturity. Presenting it as shipped reads as the opposite, and collapses the first time someone asks for a demo.
+
 ---
 
 ## 3. Overall Description
@@ -257,8 +279,10 @@ Users are assumed cognitively impaired by grief and sleep deprivation. Reading c
 | FR-QUIET | 7 |
 | FR-VOICE | 10 |
 | FR-DEMO | 11 |
+| FR-ADAPT (§5.13, §2.7) | 28 |
+| FR-STRETCH-017/018 (§2.6) | *(counted in FR-STRETCH)* |
 | FR-MODEL (§11.4) | 5 |
-| **Functional total** | **168** |
+| **Functional total** | **196** |
 | NFR-PERF | 9 |
 | NFR-VOICE | 5 |
 | NFR-REL | 8 |
@@ -268,7 +292,7 @@ Users are assumed cognitively impaired by grief and sleep deprivation. Reading c
 | NFR-OBS | 7 |
 | NFR-SEC | 7 |
 | **Non-functional total** | **59** |
-| **Grand total** | **227** |
+| **Grand total** | **255** |
 | (plus) Assumptions ASM | 20 |
 | (plus) Acceptance criteria AC | 26 |
 | (plus) Risks RISK | 14 |
@@ -563,6 +587,84 @@ Users are assumed cognitively impaired by grief and sleep deprivation. Reading c
 | FR-DEMO-009 | The panel shall provide a **degrade** switch that simulates LLM/TTS failure so the presenter can demonstrate graceful degradation deliberately. | S/D |
 | FR-DEMO-010 | The panel shall expose the raw `CareState` JSON for the current turn, pretty-printed and copyable. | M/D |
 | FR-DEMO-011 | All demo-panel state changes shall be logged as `SessionEvent`s of type `DEMO_CONTROL` so the timeline remains honest. | S/T |
+
+### 5.13 Adaptive Presentation — `FR-ADAPT`
+
+The surface adapts to the person. Three inputs drive it: the **channel** they chose (voice or text), the **mood** inferred from what they said and how they said it, and an **optional** age band. Nothing here creates a second decision engine — mood and care state are read from the same signal pass (§5.2.2), so `FR-ADAPT` changes how the answer *looks and sounds*, never what the answer *is*.
+
+#### 5.13.1 Entry & Channel Choice
+
+| ID | Requirement | P/V |
+|---|---|---|
+| FR-ADAPT-001 | First load shall present **one** screen carrying two rows on an otherwise empty surface: **Talk / Type**, and the four mood chips (`FR-ADAPT-020`). Two taps to enter, both skippable. No logo animation, no carousel, no consent wall, no sign-up. Never two sequential onboarding screens. | M/D |
+| FR-ADAPT-002 | Both rows shall be skippable: typing into the composer or pressing the mic shall dismiss the entry screen, select that channel implicitly, and leave mood `none`. The screen is an offer, not a gate. | M/D |
+| FR-ADAPT-003 | Both channels shall remain available at all times after entry via the persistent composer (`FR-UI-022`). Switching shall be one tap, shall preserve the full session (memory, queue, care state, transcript), and shall not restart the conversation. | M/D |
+| FR-ADAPT-004 | The chooser shall record the selection as a memory preference (`preferred_channel`) so a returning session opens in that channel without re-asking. | S/D |
+| FR-ADAPT-005 | With `VOICE_MODE=off`, the **Talk** control shall be absent — not present-and-disabled. The chooser degrades to a single "Start" affordance and the product loses nothing else. | M/D |
+
+#### 5.13.2 Mood Taxonomy
+
+| ID | Requirement | P/V |
+|---|---|---|
+| FR-ADAPT-006 | The system shall recognise exactly four moods, plus a fifth safety band that overrides all others: `OVERWHELMED`, `NUMB`, `RAW`, `ANXIOUS`, and (override) `CRISIS`. `CRISIS` is system-set only and shall not appear in any user-facing picker. | M/T |
+| FR-ADAPT-007 | Mood shall be **declared by the user** (`FR-ADAPT-020`). Inference from the signal pass (§5.2.2) — lexical markers, fragmentation, time bucket, admin density, and vocal prosody where the transcription provider exposes it — is secondary, may only *offer* a change (`FR-ADAPT-025`), and shall never silently overwrite a declared mood. No additional model call shall be made solely to obtain mood. | M/D |
+| FR-ADAPT-008 | Mood shall be presentational. Routing, the Single Next Step, the Not Tonight queue, and all safety behaviour shall be determined by `CareState` (§5.2.3) alone. A mood misclassification shall be able to make the screen the wrong colour; it shall never be able to make the system say the wrong thing. | M/T |
+| FR-ADAPT-009 | `CRISIS` mood shall be set whenever `ESCALATE` is in the mode set, shall force the neutral high-contrast theme (`FR-ADAPT-014`), and shall suppress all other mood styling. | M/T |
+| FR-ADAPT-010 | The current mood, its source (`declared` \| `inferred` \| `none`), and — when inferred — the two signals that produced it shall be exposed in the **What I Chose** panel and in the demo panel's `CareState` JSON. Adaptation that the user cannot see is indistinguishable from a bug. | M/D |
+
+#### 5.13.2a Mood Declaration
+
+| ID | Requirement | P/V |
+|---|---|---|
+| FR-ADAPT-020 | The entry screen shall present the four moods as a single row of plain-language chips beneath the channel choice, on one screen. Selecting one shall set the theme immediately and enter the session. | M/D |
+| FR-ADAPT-021 | The picker shall be skippable in one tap ("I'd rather not say"). Skipping shall set mood `none`, render the neutral default theme, and shall never re-prompt within the session. | M/D |
+| FR-ADAPT-022 | The declared mood shall be changeable at any time from the composer in one tap, preserving the full session. Changing it shall re-theme and shall be recorded as a `SessionEvent`. | M/D |
+| FR-ADAPT-023 | A declared mood shall never suppress, downgrade, or delay `ESCALATE`. Crisis detection (`FR-SAFE-001`) runs on input content and is independent of what the user selected. Someone selecting "I'd rather not say" and then disclosing self-harm shall escalate identically. | M/T |
+| FR-ADAPT-024 | Picker labels shall obey the §10.4 tone rules: plain second-person phrases, no clinical or diagnostic terms, no emoji, no severity ordering implied by position. | M/I |
+| FR-ADAPT-025 | Where inferred mood is built and disagrees with the declared mood, the system shall offer the change once, inline, as a dismissible line — "You sound like there's a lot on. Want me to switch?" — and shall not ask again that session. Auto-switching is forbidden. | C/D |
+
+**User-facing labels** (internal code → what the person reads):
+
+| Code | Label | Never say |
+|---|---|---|
+| `OVERWHELMED` | "There's too much" | "Overwhelmed", "stressed" |
+| `NUMB` | "I feel nothing" | "Numb", "dissociated", "shut down" |
+| `RAW` | "It's hitting me" | "Grieving", "raw", "distressed" |
+| `ANXIOUS` | "I'm scared about something" | "Anxious", "anxiety" |
+| *(skip)* | "I'd rather not say" | "Skip", "Prefer not to answer" |
+
+Clinical vocabulary is avoided because the product is explicitly not a clinical instrument (`OOS-07`), and because a diagnostic-sounding label invites the person to argue with it instead of picking it.
+
+**Rejected taxonomy.** "Sad / depressed / not happy" was considered and rejected: the three labels name one state, so they cannot produce three different behaviours. The four above are chosen because they demand *different responses* — flood vs shutdown vs acute grief vs dread — and each maps cleanly onto an existing care state.
+
+| Mood | Presents as | Maps to care state | Response posture |
+|---|---|---|---|
+| `OVERWHELMED` | Long unpunctuated dumps, many tasks in one breath, "and then I have to…" | `ORGANISE` | Subtract. One step, everything else parked visibly. |
+| `NUMB` | Two-word replies, long gaps, "I don't know", flat affect, 3AM | `QUIET` + `WITNESS` | Do not fill the silence. Offer nothing that needs an answer. |
+| `RAW` | Present-tense grief, the person named, tears referenced, "I can't" | `SOFTEN` | Hold. Zero action items, zero questions. |
+| `ANXIOUS` | Money, legal, deadline, "what if", repeated checking | `ORGANISE` + reassurance clause | Name the actual deadline. Remove the imagined one. |
+| `CRISIS` *(override)* | Self-harm or acute-danger signal (`FR-SAFE-001`) | `ESCALATE` | Deterministic escalation path. Styling neutralised. |
+
+#### 5.13.3 Age Band & Register
+
+| ID | Requirement | P/V |
+|---|---|---|
+| FR-ADAPT-011 | Generated copy shall **not** vary its vocabulary by age. Slang, memes, and generational idiom are forbidden in every band (`OOS-13`). The §10.4 tone rules apply unchanged at every age. | M/I |
+| FR-ADAPT-012 | An optional age band — `UNDER_25`, `25_TO_59`, `60_PLUS` — may be supplied, and shall adjust only: (a) sentence length target within the §5.9.3 caps, (b) formality of address, (c) which admin tasks surface first, and (d) which support routes are signposted. | S/D |
+| FR-ADAPT-013 | Age shall never be requested before the user has been allowed to speak or type. It shall be offered once, after the first response, as a skippable one-tap band selector, and shall be changeable later in preferences. Skipping shall select `25_TO_59` silently and shall never be re-prompted. | M/D |
+
+**Why band, not slang.** The defensible claim is that a 19-year-old suddenly named executor faces a different task set and a different tone of officialdom than a 62-year-old spouse who has done this before — so surface *different tasks* and *plainer institutional language*, not different words for grief. Bereavement copy written in teen idiom reads as mockery to the person it is aimed at, and it is the fastest available way to lose the Applicability criterion in front of a judge. See `RISK-016`.
+
+#### 5.13.4 Mood-Driven Theming
+
+| ID | Requirement | P/V |
+|---|---|---|
+| FR-ADAPT-014 | Theming shall be implemented as a swap of CSS custom properties on a single root attribute (`data-mood`). No component shall branch on mood in JavaScript. Adding or removing a mood shall be a token-table edit. | M/I |
+| FR-ADAPT-015 | Mood theming shall vary only: surface luminance, accent hue, accent saturation, ambient background wash, and response-text size. Layout, component order, spacing scale, and control positions shall be identical across all moods. | M/D |
+| FR-ADAPT-016 | Body and response text shall hold ≥ 4.5:1 contrast against their surface in every mood (`NFR-A11Y-002`). Mood shall never be the sole carrier of meaning (`NFR-A11Y-010`) — the mode chips remain the textual signal. | M/A |
+| FR-ADAPT-017 | Mood transitions shall cross-fade over ≤ 200ms and shall not animate at all under `prefers-reduced-motion` (`FR-UI-021`). No colour cycling, no gradient animation, no pulsing. | M/I |
+| FR-ADAPT-018 | The `NIGHT` time bucket shall compose with mood by further reducing maximum luminance (`FR-UI-020`); it shall not be a sixth theme. | M/D |
+| FR-ADAPT-019 | `CRISIS` shall render a fixed neutral high-contrast theme regardless of prior mood, and shall not cross-fade — it shall apply immediately. | M/D |
 
 ---
 
@@ -1788,9 +1890,12 @@ Reset clears tasks/drafts/events but keeps the session row; `DELETE` hard-delete
 
 ```
 <App>
-├── <SessionProvider>            // session_id, sim_now, care_state, memory (React context)
-├── <ThemeProvider>              // dark default; night-dim variant; prefers-reduced-motion
+├── <SessionProvider>            // session_id, sim_now, care_state, mood, age_band, channel, memory
+├── <ThemeProvider>              // sets data-mood + data-night on <html>; dark default; prefers-reduced-motion
 └── <AppShell>
+    ├── <EntryScreen>            // first load only, ONE screen, both rows skippable
+    │   ├── <ChannelChooser>     // Talk | Type; absent when VOICE_MODE=off
+    │   └── <MoodPicker>         // 4 plain-language chips + "I'd rather not say" (FR-ADAPT-020)
     ├── <Header>                 // wordmark only; no nav, no avatar, no notification bell
     ├── <MainStack>              // vertical <1024px, 3-col grid >=1024px
     │   ├── <PanelWhatIHeard>
@@ -1803,6 +1908,7 @@ Reset clears tasks/drafts/events but keeps the session row; `DELETE` hard-delete
     │   │   ├── <PanelHeader title="What I chose">
     │   │   ├── <CareStateCard>
     │   │   │   ├── <ModeChips>          // text labels, never colour-only (NFR-A11Y-010)
+    │   │   │   ├── <MoodChip>           // mood label + confidence + 2 signals (FR-ADAPT-010)
     │   │   │   ├── <RationaleList>      // 2-4 clauses, each with signal evidence on hover/expand
     │   │   │   ├── <ConfidenceMeter>    // numeric + bar
     │   │   │   └── <DegradedNotice>     // only when care_state.degraded
@@ -1820,16 +1926,20 @@ Reset clears tasks/drafts/events but keeps the session row; `DELETE` hard-delete
     │       ├── <SafePivotNotice>        // inline, contextual, only when safe_pivot
     │       └── <QuietButton>            // "I can stay quiet now."
     ├── <Composer>                       // sticky bottom, always reachable
+    │   ├── <ChannelToggle>              // Talk <-> Type, one tap, session preserved (FR-ADAPT-003)
+    │   ├── <MoodToggle>                 // change declared mood any time, one tap (FR-ADAPT-022)
     │   ├── <VoiceRecorder>              // record/stop/re-record/discard + elapsed
     │   ├── <TextInput>
     │   ├── <SubmitButton>
     │   └── <SyntheticDataWarning>       // inline, non-blocking
+    ├── <AgeBandPrompt>                  // once, AFTER first response, skippable (FR-ADAPT-013)
     ├── <Footer>                         // "Demo — synthetic data only"
     └── <DemoPanel route="/control">     // gated
         ├── <TimeShiftControl>           // 3 stops + free datetime
         ├── <ScenarioSeeder>
         ├── <SameStoryCompare>           // side-by-side 14:00 vs 03:00
         ├── <JudgeAttackButton>
+        ├── <MoodOverride>               // force a mood to show theming on stage without acting
         ├── <DegradeSwitches>
         ├── <CareStateJson>
         ├── <EventTimeline>
@@ -1847,6 +1957,21 @@ Reset clears tasks/drafts/events but keeps the session row; `DELETE` hard-delete
 Spacing scale 4/8/12/16/24/32. Radius 12px. Border 1px at 8% opacity. No shadows in quiet or night. Type scale: body 16px/1.6, panel headers 13px uppercase tracking-wide at 60% opacity, response text 20px/1.5 (the response is the largest text on the page).
 
 Palette (dark default): background `#0E1113`, surface `#161A1D`, text `#E8EAEB`, muted `#9AA3A8`, accent (used sparingly, never as the only signal) `#7FA6A0`. Night-dim variant multiplies surface luminance by 0.8 and clamps text to `#D2D6D8` while preserving ≥4.5:1 (`NFR-A11Y-002`).
+
+#### 10.2.1 Mood Theme Tokens (`FR-ADAPT-014`)
+
+Set `data-mood` on `<html>`; every value below is a CSS custom property override. Text and muted stay fixed across all moods so contrast cannot regress — only the surface, the accent, and one ambient wash move. This is the entire implementation; no component reads mood.
+
+| `data-mood` | `--bg` | `--surface` | `--accent` | `--wash` (radial, 6% opacity, top) | `--response-size` | Feel |
+|---|---|---|---|---|---|---|
+| *(default / none)* | `#0E1113` | `#161A1D` | `#7FA6A0` | none | 20px | Neutral dark |
+| `OVERWHELMED` | `#0C1012` | `#141A1C` | `#6E9AA8` cool slate-blue | `#6E9AA8` | 20px | Cooler, flatter, less to look at |
+| `NUMB` | `#0B0D0E` | `#131517` | `#8A9296` desaturated grey | none | 22px | Almost monochrome; one thing on screen |
+| `RAW` | `#12100F` | `#1A1715` | `#B08D7A` warm clay | `#B08D7A` | 22px | Warmer, softer, larger text |
+| `ANXIOUS` | `#0D1114` | `#151B1F` | `#7F9BB5` steady blue | `#7F9BB5` | 20px | Cool, ordered, low-stimulus |
+| `CRISIS` | `#0A0C0D` | `#171A1C` | `#D9E1E4` near-white | none | 22px | Fixed, maximum contrast, no fade (`FR-ADAPT-019`) |
+
+`--text: #E8EAEB` and `--muted: #9AA3A8` are constant. `data-night` composes on top: multiply `--bg` and `--surface` luminance by 0.8, clamp `--text` to `#D2D6D8`, drop `--wash` to 0 (`FR-ADAPT-018`).
 
 ### 10.3 Panel States
 
@@ -1880,6 +2005,11 @@ Palette (dark default): background `#0E1113`, surface `#161A1D`, text `#E8EAEB`,
 | UX-05 | Time-Shift changes are animated only as a cross-fade ≤ 200ms, and not at all under reduced-motion. |
 | UX-06 | The Not Tonight queue never opens itself. |
 | UX-07 | Nothing auto-focuses the text input at night — a keyboard popping up at 3AM is a demand. |
+| UX-08 | The entry screen appears once and never returns. Switching channel or mood later is a composer control, never a screen. |
+| UX-08b | Mood chips carry no severity order, no colour coding, and no default selection. Nothing is pre-highlighted. |
+| UX-09 | Switching Talk ↔ Type mid-session shall not clear the composer, stop an in-progress recording without warning, or scroll the panels. |
+| UX-10 | Mood theming changes between turns only. The surface shall never re-theme while the user is mid-sentence. |
+| UX-11 | The age-band prompt is a single row of three chips plus "skip", inline in What I Did. It is never a modal and never blocks input. |
 
 ---
 
@@ -2112,6 +2242,21 @@ Then ≥80% of LLM calls used the FAST tier and the REASON tier was invoked only
 | RISK-012 | Real PII entered accidentally during a live demo | Low | High | Client-side detector (`FR-SAFE-020`), footer marker, scripted inputs only | Presenter |
 | RISK-013 | Judges perceive the deterministic router as "just if-statements", not AI | Medium | Medium | Frame explicitly: LLM does perception, deterministic code does decision — that split *is* the engineering claim | Presenter |
 | RISK-014 | Time-Shift desynchronises state and produces a visibly wrong panel | Medium | High | `sim_now` is a single source of truth passed to every pure function; no component reads wall clock | Backend |
+| RISK-015 | **Facial-emotion capture** (camera + mood-from-face) — proposed, rejected | — | Critical if built | Four independent grounds, detailed below. Recorded as `OOS-12` so it does not resurface at 2AM | Product |
+| RISK-016 | Age-banded slang in bereavement copy reads as mockery and costs the Applicability criterion outright | Medium if built | Critical | Vocabulary adaptation forbidden at every band (`FR-ADAPT-011`, `OOS-13`); register-only adaptation retained | Prompt eng |
+| RISK-017 | Mood theming is mistaken for a second decision engine, and a mood misread is read by judges as a routing failure | Medium | Medium | Mood is presentational by construction (`FR-ADAPT-008`); `MoodChip` shows the label and its two signals so the separation is visible on screen | Frontend |
+| RISK-018 | Adaptive-presentation work consumes the build window that `RISK-008` already flags as overrun | High | High | Only `FR-ADAPT-014`/`015` (token swap), `FR-ADAPT-020` (mood picker) and `FR-ADAPT-003` (channel toggle) are on the one-hour path; the rest is documentation-only until the core is green | Lead |
+| RISK-019 | The camera appears in the deck and a judge reads it as shipped, then asks for a demo | Medium | High | §2.7 honesty rules: labelled **Not built** wherever it appears, pre-written answer in `FR-ADAPT-028`, zero camera code in the build (`FR-ADAPT-026`) so there is nothing to half-demo under pressure | Presenter |
+| RISK-020 | Asking a grieving person to label their own mood is itself a demand, and the four options may not contain how they actually feel | Medium | Medium | One tap, skippable, "I'd rather not say" carries equal weight (`FR-ADAPT-021`); skipping costs the user nothing and the neutral theme is a complete product | Product |
+
+**RISK-015 detail — why the face scan is out.** Any one of these is disqualifying; together they are decisive.
+
+1. **The inference is not sound.** Mapping facial configuration to emotional state is contested in the psychology literature — the standard reference is Barrett, Adolphs, Marsella, Martinez & Pollak (2019), *Emotional Expressions Reconsidered*, in *Psychological Science in the Public Interest*, which reviews the evidence and concludes that facial movements do not reliably signal specific emotions across people and contexts. A grieving person's flat face and a bored person's flat face are the same face. Building the product's whole visual and tonal register on that reading means being confidently wrong at the worst possible moment.
+2. **It is the wrong data class.** Emotion inferred from a face is biometric data under UK GDPR Article 9. The EU AI Act additionally prohibits emotion-recognition systems in workplace and education contexts and treats other emotion-recognition deployments as high-risk. For a product positioned to a company handling bereaved families, "we photographed your face to guess how sad you were" is an answer that cannot be given well. Verify the current Article 9 and AI Act text before relying on this framing in the pitch.
+3. **It contradicts the thesis.** QuietBridge's claim is that it *demands less* than a chatbot — fewer questions, less input, less friction. A camera permission prompt before the first sentence is the single loudest demand in the product, aimed at someone who has been awake since 3AM. The feature argues against the pitch while the pitch is being delivered.
+4. **It is the most fragile thing on stage.** Camera permission dialog, venue lighting, laptop angle, a face-detection model loading over conference wifi — four failure points in the first ten seconds, before any of the actual work is visible. `RISK-001` already assumes the network fails.
+
+The salvageable half of the idea — *read mood, adapt the surface to it* — is retained in full as `FR-ADAPT-006`–`019`, sourced from language and prosody, which the product is already ingesting.
 
 ---
 
@@ -2127,6 +2272,10 @@ Tracked here rather than silently assumed. See the accompanying report.
 | OPEN-04 | Is the crisis classifier lexicon-based, embedding-based, or both? |
 | OPEN-05 | Day-14 content: what does "low-friction company" concretely render as? |
 | OPEN-06 | Whether to demo on mobile viewport or desktop three-column. |
+| OPEN-07 | Does mood theming survive a projector? The six token sets differ by surface luminance and one accent — on a washed-out venue projector they may be indistinguishable, which would make `FR-ADAPT-014` invisible work. Test on the actual screen before relying on it in the script. |
+| OPEN-08 | Is the age band worth its onboarding cost at all? `FR-ADAPT-012` is `S`, and the demo persona is fixed — the band may be pure spec with no on-stage payoff. |
+| OPEN-09 | ~~Where does prosody come from?~~ **Resolved v0.3** — mood is declared, so no inference is on the critical path. Prosody matters only if `FR-ADAPT-025` is built, which is `C`. |
+| OPEN-10 | Does the four-option picker cover enough? `RISK-020` — if a judge picks nothing because none fit, the skip path must look deliberate rather than like a dead end. |
 
 ---
 
