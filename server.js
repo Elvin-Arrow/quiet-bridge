@@ -3,10 +3,14 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { route } from './src/router.js';
 import { synthesize, voiceEnabled } from './src/voice.js';
+import { transcribe, listenEnabled } from './src/listen.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: '256kb' }));
+// Audio arrives as raw bytes rather than multipart, so no upload middleware
+// is needed and there is one less dependency to fail at the venue.
+app.use(express.raw({ type: 'audio/*', limit: '25mb' }));
 app.use(express.static(join(__dirname, 'public')));
 
 // Demo timeline stops (FR-DEMO-002). Fixed dates so the demo is reproducible.
@@ -42,6 +46,7 @@ function publicState() {
     facts: session.facts,
     turn_count: session.turns.length,
     voice_enabled: voiceEnabled(),
+    listen_enabled: listenEnabled(),
     care_state: session.last,
   };
 }
@@ -101,6 +106,27 @@ app.post('/v1/ingest', async (req, res) => {
     return res.status(500).json({
       error: { code: 'ROUTER_FAILED', message: 'That did not go through. Your note is saved.' },
     });
+  }
+});
+
+// Speech in. Returns the transcript only — the caller then posts it to
+// /v1/ingest, so the voice path and the typed path share one router and
+// cannot drift apart.
+app.post('/v1/listen', async (req, res) => {
+  if (!listenEnabled()) return res.status(503).json({ error: { code: 'LISTEN_OFF' } });
+  const audio = Buffer.isBuffer(req.body) ? req.body : null;
+  if (!audio?.length) {
+    return res.status(400).json({ error: { code: 'NO_AUDIO', message: 'I did not catch that.' } });
+  }
+  try {
+    const text = await transcribe(audio, req.get('content-type') || 'audio/webm');
+    if (!text) {
+      return res.status(422).json({ error: { code: 'NO_SPEECH', message: 'I did not catch that.' } });
+    }
+    return res.json({ text });
+  } catch (err) {
+    console.error('[listen]', err.message);
+    return res.status(500).json({ error: { code: 'LISTEN_FAILED', message: 'I did not catch that.' } });
   }
 });
 

@@ -28,7 +28,7 @@ function applyMood(mood) {
 document.querySelectorAll('#channel-row .chip').forEach((b) => {
   b.addEventListener('click', () => {
     channel = b.dataset.channel;
-    $('channel-toggle').textContent = channel === 'voice' ? 'Type' : 'Talk';
+    applyChannel();
     document.querySelectorAll('#channel-row .chip').forEach((x) => x.classList.remove('active'));
     b.classList.add('active');
   });
@@ -44,10 +44,17 @@ document.querySelectorAll('#mood-row .chip, .skip').forEach((b) => {
   });
 });
 
+function applyChannel() {
+  $('channel-toggle').textContent = channel === 'voice' ? 'Type' : 'Talk';
+  $('mic').hidden = channel !== 'voice';
+  $('input').hidden = channel === 'voice';
+  $('send').hidden = channel === 'voice';
+}
+
 // Channel and mood are composer controls after entry, never a screen again (UX-08).
 $('channel-toggle').addEventListener('click', async () => {
   channel = channel === 'voice' ? 'text' : 'voice';
-  $('channel-toggle').textContent = channel === 'voice' ? 'Type' : 'Talk';
+  applyChannel();
   await post('/v1/mood', { channel });
 });
 
@@ -71,11 +78,83 @@ $('quiet-btn').addEventListener('click', async () => {
   $('play').hidden = true;
 });
 
+// ---- Voice in -------------------------------------------------------------
+// Hold to talk. Press-and-hold rather than tap-to-toggle because a
+// half-open mic that nobody notices is the classic on-stage failure.
+let recorder = null;
+let chunks = [];
+let recording = false;
+
+async function startRecording() {
+  if (recording) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+    recorder = new MediaRecorder(stream, { mimeType: mime });
+    chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop());
+      submitAudio(new Blob(chunks, { type: mime }), mime);
+    };
+    recorder.start();
+    recording = true;
+    $('mic').classList.add('recording');
+    $('mic').textContent = 'Listening — let go to send';
+  } catch (err) {
+    $('mic').textContent = 'I need the microphone';
+  }
+}
+
+function stopRecording() {
+  if (!recording || !recorder) return;
+  recording = false;
+  $('mic').classList.remove('recording');
+  $('mic').textContent = 'Hold to talk';
+  recorder.stop();
+  recorder = null;
+}
+
+async function submitAudio(blob, mime) {
+  if (blob.size < 2000) return; // a tap, not a sentence
+  if (audioEl) { audioEl.pause(); audioEl = null; }
+  $('response').textContent = 'Reading.';
+
+  let text;
+  try {
+    const res = await fetch('/v1/listen', {
+      method: 'POST',
+      headers: { 'Content-Type': mime },
+      body: blob,
+    });
+    if (!res.ok) throw new Error('listen');
+    ({ text } = await res.json());
+  } catch (err) {
+    $('response').textContent = 'I did not catch that. Try again?';
+    return;
+  }
+  // The transcript lands in What I heard before the router replies, so
+  // voice and the panels never look out of step (UX-04).
+  $('heard-empty').hidden = true;
+  $('facts').innerHTML = `<li>${esc(text)}<span class="src">voice</span></li>${$('facts').innerHTML}`;
+  await sendText(text);
+}
+
+const mic = $('mic');
+mic.addEventListener('mousedown', startRecording);
+mic.addEventListener('mouseup', stopRecording);
+mic.addEventListener('mouseleave', stopRecording);
+mic.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
+mic.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
+
 async function send() {
   const text = $('input').value.trim();
   if (!text) return;
-
   $('input').value = '';
+  await sendText(text);
+}
+
+async function sendText(text) {
   document.body.classList.remove('quiet');
   $('response').textContent = 'Reading.';
   $('play').hidden = true;

@@ -49,7 +49,7 @@ happening on screen at each step)
   she said. What I Chose, the care state, and why. What I Did, the actual
   output. Perceive, decide, act. In that order. Visible."
 - *[1:21–1:33, 12s]* "The reply is short. This is Organise plus Quiet,
-  capped at thirty-five words, enforced in code after generation, not just
+  capped at twenty-five words, enforced in code after generation, not just
   asked for in a prompt."
 - *[1:33–1:41, 8s]* "Optionally, ElevenLabs speaks it, slowed to
   zero-point-eight-five for a quiet-mode reply."
@@ -113,7 +113,7 @@ Left column is what's physically on screen; right column is the exact words.
 | Entry screen, channel + mood chips visible | "This is the entry screen. I pick a channel, then tap a mood chip: 'There's too much.' Watch the screen. The theme shifts with the mood I picked." |
 | Text box, empty, cursor blinking | "Her mum died last night. Work keeps messaging. The bank wants documents. She hasn't slept. Please don't make me do ten things." (typed as spoken) |
 | Three panels rendered: What I Heard / What I Chose / What I Did | "Three panels render. What I Heard, the memory of what she said. What I Chose, the care state, and why. What I Did, the actual output. Perceive, decide, act. In that order. Visible." |
-| Reply text visible under "What I Did," 35 words, Organise+Quiet badge | "The reply is short. This is Organise plus Quiet, capped at thirty-five words, enforced in code after generation, not just asked for in a prompt." |
+| Reply text visible under "What I Did," ~25 words, Organise+Quiet badge | "The reply is short. This is Organise plus Quiet, capped at twenty-five words, enforced in code after generation, not just asked for in a prompt." |
 | Play button next to reply (tap-to-play, no autoplay) | "Optionally, ElevenLabs speaks it, slowed to zero-point-eight-five for a quiet-mode reply." |
 | "I can stay quiet now" button, single tap, no dialog | "One tap. No 'are you sure.' Watch." [TAP] (8s silence) |
 | Screen collapsed to one line: "I'll be here. Nothing until tomorrow." | (silence, then) "That's the emotional core of this build." |
@@ -180,9 +180,9 @@ real seam, the outbox table, is already shaped, just waiting on a drain loop."
 **9 (bonus). "Why should we believe restraint is a feature and not you
 running out of time?"**
 "Because it costs us engineering, not saves it. Word caps are enforced in
-code after generation: QUIET mode caps speech at fifteen words. The quiet
-button has no confirmation dialog. Restraint that costs something is
-restraint you meant." *(38 words)*
+code after generation, and the tightest active mode wins. The quiet button
+has no confirmation dialog. Restraint that costs something is restraint you
+meant." *(37 words)*
 
 ---
 
@@ -202,25 +202,26 @@ Use verbatim if they say "you have thirty seconds."
 
 ## Correction note (for the team, not for stage)
 
-The original brief said word caps were "QUIET 25, WITNESS 35, SOFTEN 45,
-ORGANISE and ESCALATE 60." The normative table in `REQUIREMENTS.md` lines
-361–371 gives different numbers per exact mode *combination*, not per single
-mode in isolation:
+Three sources disagree about word caps. The script quotes the **shipped code**,
+because that is what runs on stage and a judge can count the words on screen.
 
-| Mode set | Max words | Speed |
-|---|---|---|
-| `{WITNESS}` | 25 | 0.95 |
-| `{SOFTEN}` | 40 | 0.90 |
-| `{QUIET}` | 15 | 0.85 |
-| `{ORGANISE}` | 60 | 1.00 |
-| `{ORGANISE, QUIET}` | 35 | 0.85 |
-| `{ORGANISE, WITNESS}` | 50 | 0.95 |
-| `{SOFTEN, QUIET}` | 20 | 0.85 |
-| `{WITNESS, QUIET}` | 15 | 0.85 |
-| `{ESCALATE}` | 45 | 0.80 |
+`REQUIREMENTS.md` §5.2.3 gives a per-*combination* table (`{ORGANISE, QUIET}` = 35
+words). The code does not implement that table. `src/signals.js:137` defines caps
+per single mode and `capFor` takes the **minimum** across the active set:
 
-Maya's message routes to `{ORGANISE, QUIET}` (Day-1 3AM overload, per
-`IDEA.md` line 51), so the demo beat and Q&A #9 use **35 words** and
-**0.85x**, not the brief's rounded figures. The 0.80/0.85/0.90 speed tiers by
-mode-family (Escalate/Quiet-containing/Soften) were correct in the brief and
-are unchanged here.
+| Mode | Cap (`WORD_CAPS`) |
+|---|---|
+| `QUIET` | 25 |
+| `WITNESS` | 35 |
+| `SOFTEN` | 45 |
+| `ORGANISE` | 60 |
+| `ESCALATE` | 60 |
+
+Maya's message routes to `{ORGANISE, QUIET}` (Day-1 3AM overload, per `IDEA.md`
+line 51), so the live cap is `min(60, 25)` = **25 words at 0.85x**. Not 35 (spec
+table), not 60. Speed comes from `speedFor`: ESCALATE 0.80, QUIET 0.85, SOFTEN
+0.90, otherwise 1.00 — those were already correct everywhere.
+
+If a judge asks why the spec says 35: the spec is v0.3 draft and the combination
+matrix was not implemented. Say that plainly rather than defending a number the
+screen contradicts.

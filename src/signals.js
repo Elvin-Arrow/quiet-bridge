@@ -97,7 +97,7 @@ export function decideModes(signals, { crisis = false, declaredMood = null } = {
     rationale.push('It is the middle of the night. Nothing here needs doing now.');
   }
 
-  if (signals.admin_density >= 40) {
+  if (signals.admin_density >= 30) {
     modes.push('ORGANISE');
     rationale.push(`You named ${Math.round(signals.admin_density / 18)} things that want handling.`);
   } else if (signals.fatigue >= 45) {
@@ -125,7 +125,7 @@ export function decideModes(signals, { crisis = false, declaredMood = null } = {
 }
 
 function inferMood(signals, modes) {
-  if (signals.admin_density >= 40) return 'OVERWHELMED';
+  if (signals.admin_density >= 30) return 'OVERWHELMED';
   if (signals.anxiety >= 40) return 'ANXIOUS';
   if (signals.fragmentation >= 70 && signals.word_count < 15) return 'NUMB';
   if (modes.includes('SOFTEN')) return 'RAW';
