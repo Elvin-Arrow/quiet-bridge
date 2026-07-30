@@ -643,6 +643,14 @@ function Composer({
           maxLength={4000}
           rows={1}
           onChange={(event) => onInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
+              if (input.trim() && !loading) {
+                event.currentTarget.form?.requestSubmit()
+              }
+            }
+          }}
           placeholder={quiet ? 'Write when you need to…' : 'Write what is happening. Short is fine…'}
         />
         <div className="composer-meta">
@@ -659,7 +667,7 @@ function Composer({
       </form>
       {!quiet && (
         <p className="composer-hint">
-          No categories to choose. No need to make it tidy.
+          Press Enter to send · Shift+Enter for a new line
         </p>
       )}
     </div>

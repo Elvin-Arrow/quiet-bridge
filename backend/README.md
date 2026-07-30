@@ -21,12 +21,17 @@ curl http://localhost:3001/health
 
 OpenAI extraction is optional. Without `OPENAI_API_KEY`, or with
 `DEMO_OFFLINE=true`, deterministic extraction keeps every demo path functional.
-To use OpenAI credits, add the key only to `backend/.env`:
+To use hackathon OpenAI credits, add the team key only to `backend/.env`:
 
 ```dotenv
-OPENAI_API_KEY=your-key
-OPENAI_MODEL=gpt-4.1-mini
+OPENAI_API_KEY=your-team-key
+OPENAI_BASE_URL=https://4.231.223.10.nip.io
+OPENAI_MODEL=gpt-5.4-mini
 ```
+
+Per the Empathetic Agents handbook, the team key does **not** work against
+`api.openai.com`; it must use the hackathon proxy base URL above. Use
+`gpt-5.4-mini` during development to stay within the $50 team budget.
 
 Never commit `.env`.
 
